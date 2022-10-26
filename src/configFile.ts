@@ -1,6 +1,7 @@
 import { exists as fileExists, readFileSync, writeFileSync } from "mz/fs";
 import { Config } from "./Config";
 import { Policy } from "./Policy";
+
 let config: Config;
 let configLoaded = false;
 const defaultFilePath = "./diffjam.yaml";

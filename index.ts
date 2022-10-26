@@ -25,7 +25,9 @@ process.on("unhandledRejection", (err: unknown) => {
 
 
 // run!
-const run = async function (action: string, param1: string, flags: { config: string; }) {
+const run = async function (action: string, param1: string, flags: { dir?: string, config?: string; }) {
+  const dir = flags.dir || process.cwd();
+
   await configFile.getConfig(flags.config);
   if (!action || action === "menu") {
     return actionMainMenu(clientVers);
