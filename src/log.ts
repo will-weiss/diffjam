@@ -42,8 +42,8 @@ const logBreachError = (breach: Policy) => {
   }
 };
 
-export const logResults = async (conf: Config, cwd: CurrentWorkingDirectory) => {
-  const policies = await getResults(cwd, conf);
+export const logResults = async (configFilePath: string | undefined, cwd: CurrentWorkingDirectory, bar: any) => {
+  const policies = await getResults(cwd, configFilePath, bar);
 
   const [successes, breaches] = partition(policies, policy => policy.isCountAcceptable());
 

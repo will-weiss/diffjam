@@ -1,10 +1,10 @@
 import { fdir } from "fdir";
-import findup from 'findup-sync';
 import ignore from 'parse-gitignore';
 import mm from 'micromatch';
-import fs from "fs";
+import { readFile } from "fs";
+import { join } from "path";
 
-export const cleanIgnorePatterns = (ignorePatterns: string[]) => {
+export const cleanIgnorePatterns = (ignorePatterns: string[]): string[] => {
   const retval = ignorePatterns.map((p) => {
     if (p[0] && p[0] === "/") {
       return p.slice(1, p.length);
@@ -19,28 +19,24 @@ export const cleanIgnorePatterns = (ignorePatterns: string[]) => {
 }
 
 export class CurrentWorkingDirectory {
-  gitignorePatterns: string[]
+  constructor(public cwd: string) { }
 
-  constructor(public cwd: string) {
-    const gitignoreFile = findup('.gitignore', { cwd });
-    if (gitignoreFile) {
-      const fileContents = fs.readFileSync(gitignoreFile).toString();
-      this.gitignorePatterns = cleanIgnorePatterns(ignore(fileContents));
-    } else {
-      this.gitignorePatterns = [];
-    }
+  gitIgnorePatterns(): Promise<string[]> {
+    const gitignorePath = join(this.cwd, ".gitignore");
+    return new Promise(resolve => {
+      readFile(gitignorePath, { encoding: "utf8" }, (err, fileContents) => {
+        if (err) resolve([]);
+        resolve(cleanIgnorePatterns(ignore(fileContents)));
+      });
+    });
   }
 
-  private filterFile(matchPatterns: string[], path: string, isDirectory: boolean): boolean {
-    return !isDirectory && !mm.any(path, this.gitignorePatterns) && mm.any(path, matchPatterns);
-  }
-
-  allNonGitIgnoredFilesMatchingPatterns(patterns: string[]) {
+  allFiles(): Promise<string[]> {
     return new fdir()
       .withRelativePaths()
       .withErrors()
-      .filter(this.filterFile.bind(this, patterns))
+      .filter((_, isDirectory) => !isDirectory)
       .crawl(this.cwd)
-      .withPromise()
+      .withPromise() as any
   }
 }
